@@ -25,20 +25,21 @@ int main()
     luaopen_string(L);//字符串库
 
 
-//    要有实现代码 单单头文件+lib会报未定义
+//    要有Logger::setLogLevel 不然 会报未定义
 //
+    Logger::setLogLevel(Logger::DEBUG);
 
-//    LuaClass<InetAddress>(L)
-//            .create<unsigned short, bool, bool>("InetAddress");
-//
-//    LuaClass<EventLoop>(L)
-//            .create("EventLoop");
+    LuaClass<InetAddress>(L)
+            .create<unsigned short, bool, bool>("InetAddress");
+
+    LuaClass<EventLoop>(L)
+            .create("EventLoop");
 
 
-//    LuaClass<ChatServer>(L)
-//            .create<EventLoop,InetAddress>("ChatServer")
-//            .def("start", &ChatServer::start)
-//            .def("onConnection", &ChatServer::onConnection);
+    LuaClass<ChatServer>(L)
+            .create<EventLoop*, const InetAddress&>("ChatServer")  // 模板方法
+            .def("start", &ChatServer::start)
+            .def("onConnection", &ChatServer::onConnection);
 
     return 0;
 }
