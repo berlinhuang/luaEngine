@@ -19,10 +19,13 @@ target_link_libraries(asio_chat_server muduo_base muduo_net pthread)
 
 # add_executable(asio_chat_server_threaded_highperformance server_threaded_highperformance.cc)
 # target_link_libraries(asio_chat_server_threaded_highperformance muduo_net)
-add_compile_options(-std=c++11)
+#add_compile_options(-std=c++11)
 
 include_directories(./../lua515)
 include_directories(./../lua_tinker)
+
+
+set(EXECUTABLE_OUTPUT_PATH  ${PROJECT_SOURCE_DIR}/chat)
 
 add_executable(luaserver luaserver.cpp)
 target_link_libraries(luaserver lua luatinker)

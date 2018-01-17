@@ -111,17 +111,28 @@ private:
 ChatServer *g_server = 0;
 bool bHandleMsg = true;
 typedef std::list<MessageQueuePtr>::iterator MessageQueueIter;
-static inline void hanleMessageQueue() {
-    while (bHandleMsg) {
-        if (g_server && g_server->hasMessge()) {
+
+static inline void hanleMessageQueue()
+{
+    while (bHandleMsg)
+    {
+        if (g_server && g_server->hasMessge())
+        {
             std::list<MessageQueuePtr> messageQueue;
 
             g_server->distillMessageQueue(messageQueue);
-            for (MessageQueueIter itr = messageQueue.begin(); itr != messageQueue.end(); ++itr) {
-                printf("[%s][%p][%s]\n", (*itr)->timestamp_.toString().c_str(), (*itr)->conn_,
+            for (MessageQueueIter itr = messageQueue.begin(); itr != messageQueue.end(); ++itr)
+            {
+                printf("[%s][%p][%s]\n",
+                       (*itr)->timestamp_.toString().c_str(),
+                       (*itr)->conn_,
                        (*itr)->message_.c_str());
             }
         }
     }
 }
+
+void startServer( char* ip, int port );
+
+
 #endif //LUAENGINE_SERVER_H_H

@@ -30,7 +30,7 @@ bool customLuaLoader(lua_State* L);
 
 void Register();
 
-template<typename Object, typename ...Arg>
+template<typename Object>
 class LuaClass
 {
     lua_State*  m_state;
@@ -87,7 +87,7 @@ public:
             lua_tinker::class_add<Object>(m_state, name);
             m_bCreated = true;
         }
-        lua_tinker::class_inh<Object, Arg...>(m_state);//注册类继承关系
+        lua_tinker::class_inh<Object>(m_state);//注册类继承关系
         lua_tinker::class_con<Object>(m_state, lua_tinker::constructor<Object,int>);
         return *this;
     }
