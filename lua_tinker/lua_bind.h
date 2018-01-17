@@ -125,6 +125,18 @@ public:
         lua_tinker::class_con<Object>(m_state, lua_tinker::constructor<Object, T1, T2>);
         return *this;
     }
+
+    template<typename T1, typename T2, typename T3>
+    inline LuaClass& create(const char* name)
+    {
+        if (!m_bCreated)
+        {
+            lua_tinker::class_add<Object>(m_state, name);
+            m_bCreated = true;
+        }
+        lua_tinker::class_con<Object>(m_state, lua_tinker::constructor<Object, T1, T2, T3>);
+        return *this;
+    }
 };
 
 

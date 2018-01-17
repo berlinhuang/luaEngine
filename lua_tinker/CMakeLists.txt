@@ -9,6 +9,6 @@ message(STATUS "lua found in " ${LUA_LIB})
 
 
 
-add_library(luatinker     lua_tinker.cpp)
+add_library(luatinker lua_tinker.cpp lua_bind.cpp)
 link_libraries(luatinker ${LUA_LIB})
 
