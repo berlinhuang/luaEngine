@@ -14,7 +14,7 @@
 
 #include <boost/bind.hpp>
 #include <boost/make_shared.hpp>
-
+#include <boost/functional.hpp>
 #include <list>
 #include <set>
 #include <stdio.h>
@@ -23,6 +23,8 @@
 
 using namespace muduo;
 using namespace muduo::net;
+
+boost::function<void()> _onMessage;
 
 class ChatServer : boost::noncopyable
 {
@@ -44,7 +46,7 @@ public:
         LOG_INFO << "Server start success";
     }
 
-    bool hasMessge(){ return messageQueue_.empty(); }
+    bool hasMessge(){ return !messageQueue_.empty(); }
     void distillMessageQueue(std::list<MessageQueuePtr>& messageQueue) {
         // todo:
         {
@@ -108,6 +110,12 @@ private:
     std::list<MessageQueuePtr> messageQueue_;
 };
 
+
+static void mystartServer( char* ip, int port );
+static int cppFunc(int arg1, int arg2);
+static int onMessage(  );
+
+
 ChatServer *g_server = 0;
 bool bHandleMsg = true;
 typedef std::list<MessageQueuePtr>::iterator MessageQueueIter;
@@ -118,21 +126,11 @@ static inline void hanleMessageQueue()
     {
         if (g_server && g_server->hasMessge())
         {
-            std::list<MessageQueuePtr> messageQueue;
-
-            g_server->distillMessageQueue(messageQueue);
-            for (MessageQueueIter itr = messageQueue.begin(); itr != messageQueue.end(); ++itr)
-            {
-                printf("[%s][%p][%s]\n",
-                       (*itr)->timestamp_.toString().c_str(),
-                       (*itr)->conn_,
-                       (*itr)->message_.c_str());
-            }
+            _onMessage();
         }
     }
 }
 
-static void startServer( char* ip, int port );
-static int cppFunc(int arg1, int arg2);
+
 
 #endif //LUAENGINE_SERVER_H_H

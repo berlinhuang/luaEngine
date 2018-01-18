@@ -7,7 +7,7 @@ IF(NOT LUA_LIB)
 ENDIF(NOT LUA_LIB)
 message(STATUS "lua found in " ${LUA_LIB})
 
-
+add_compile_options(-std=c++11)
 
 add_library(luatinker lua_tinker.cpp lua_bind.cpp)
 link_libraries(luatinker ${LUA_LIB})

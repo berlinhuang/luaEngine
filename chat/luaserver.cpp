@@ -10,6 +10,7 @@ extern "C"
 };
 
 #include <signal.h>
+
 #include "lua_bind.h"
 #include "luaserver.h"
 using namespace std;
@@ -18,24 +19,43 @@ static char AppProgArgs[] = "";//全局变量
 
 
 
-
-
-
-void startServer( char* ip, int port )
+void mystartServer( char* ip, int port )
 {
     EventLoop loop;
     InetAddress serverAddr(ip, port);
 
-    muduo::Thread thr(boost::bind(hanleMessageQueue), "hanleMessageQueue");
-    thr.start();
+//    muduo::Thread thr(boost::bind(hanleMessageQueue), "hanleMessageQueue");
+//    thr.start();
 
     ChatServer server(&loop, serverAddr);
     g_server = &server;
     server.start();
 
     loop.loop();
-    thr.join();
+//    thr.join();
 }
+
+int startServer( lua_State* L )
+{
+    const char *ip = luaL_checkstring(L,1);
+    if( ! ip ) return 0;
+    int port = luaL_checkint(L,2);
+
+    EventLoop loop;
+    InetAddress serverAddr(ip, port);
+    muduo::Thread thr(boost::bind(hanleMessageQueue), "hanleMessageQueue");
+    thr.start();
+    ChatServer server(&loop, serverAddr);
+    g_server = &server;
+    server.start();
+
+    loop.loop();
+    thr.join();
+    return 0;
+}
+
+
+
 
 int cppFunc(int arg1, int arg2)
 {
@@ -45,8 +65,9 @@ int cppFunc(int arg1, int arg2)
 
 //{  name,  func  }
 //{ 字符串， c函数指针 }
-static luaL_Reg luaserver[] = {
-        { NULL, NULL }
+static struct luaL_Reg luaserver[] = {
+        { "startServer", startServer},
+        { NULL , NULL }
 };
 
 int luaopen_luaserver(lua_State *L)
@@ -82,7 +103,54 @@ static const struct luaL_Reg stCommonFunc[] = {
         { NULL , NULL }
 };
 
+
+
 ////////////////////////////////////////////////////////////////////////////////////////
+
+static int lua_callback = LUA_REFNIL;
+
+static int setMessageCallback(lua_State *L)
+{
+    lua_callback = luaL_ref(L, LUA_REGISTRYINDEX);// 对栈顶的值v生成返回一个引用r，即将[引用r， 栈顶值v]存到LUA_REGISTRYINDEX表中
+    return 0;
+}
+
+static int onMessage(lua_State *L)
+{
+    std::list<MessageQueuePtr> messageQueue;
+    g_server->distillMessageQueue(messageQueue);
+    for (MessageQueueIter itr = messageQueue.begin(); itr != messageQueue.end(); ++itr) {
+        const char *time = (*itr)->timestamp_.toString().c_str();
+        const char *msg = (*itr)->message_.c_str();
+        // 将一个引用值入栈
+        lua_rawgeti(L, LUA_REGISTRYINDEX, lua_callback);
+        lua_pushstring(L, time);//params
+        lua_pushstring(L, msg);
+        int status = lua_pcall(L, 2, 0, 1);//L当前栈，参数个数，返回值个数，发生错误处理时代码返回
+
+    }
+}
+
+static int testenv(lua_State *L)
+{
+    lua_getglobal(L, "defcallback");
+    lua_call(L, 0, 0);
+}
+
+
+static const luaL_Reg cblib[] = {
+        {"_setMessageCallback", setMessageCallback},
+//        {"_onConnected", onConnected},
+        {NULL, NULL}
+};
+
+int luaopen_cb(lua_State *L)
+{
+    luaL_register(L, "CFNet", cblib);
+    return 1;
+}
+
+/////////////////////////////////////////////////////////////////////////
 
 
 int main(int argc, char* argv[])
@@ -123,6 +191,41 @@ int main(int argc, char* argv[])
     lua_tinker::set(L, "g_server", g_server);//没注册 这个 为什么会有个signal
     lua_tinker::set(L, "g_progArgs", AppProgArgs);
 
+//导出函数CF...(C Func)
+//    lua_newtable(L);
+//    lua_tinker::subdef(L, "cppFunc", cppFunc);
+//    lua_tinker::subdef(L, "startServer", startServer);
+//    lua_setglobal(L, "CFServer");
+
+//导出函数
+    luaL_register( L , "CFSys" , stCommonFunc ) ;
+
+    luaL_register( L , "CFServer" , luaserver ) ;
+
+//callback CFNet
+    luaopen_cb(L);
+    _onMessage= boost::bind(onMessage, L);
+
+    lua_tinker::dofile(L, "luaserver.lua");
+    lua_close(L);
+    return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //导出全局表格CT...(C Table)
 //    lua_newtable(L);
 //    lua_tinker::table luaserver(L, "CTTest");
@@ -133,23 +236,6 @@ int main(int argc, char* argv[])
 //    sub.set("val", 2);//给表变量赋值 CTTest = { val = 1, sub = { val =2 } }
 //    lua_settable(L, LUA_GLOBALSINDEX);
 //    lua_settable(L, LUA_GLOBALSINDEX);
-
-//导出函数CF...(C Func)
-    lua_newtable(L);
-    lua_tinker::subdef(L, "cppFunc", cppFunc);
-    lua_tinker::subdef(L, "startServer", startServer);
-    lua_setglobal(L, "CFServer");
-
-//导出函数
-    luaL_register( L , "ScriptSys" , stCommonFunc ) ;
-
-    lua_tinker::dofile(L, "luaserver.lua");
-    lua_close(L);
-    return 0;
-}
-
-
-
 
 
 

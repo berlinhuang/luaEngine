@@ -2,7 +2,7 @@
 local strServType = string.match( g_progArgs , "-s%s+(%w+)" )
 if strServType == nil then
     print( "usage: -s [MyServer|SceneServer|DBServer|]" )
-    ScriptSys.exit(-1)
+    CFSys.exit(-1)
 end
 
 if strServType == 'MyServer' then
