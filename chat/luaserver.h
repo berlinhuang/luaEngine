@@ -132,7 +132,7 @@ static inline void hanleMessageQueue()
     }
 }
 
-void startServer( char* ip, int port );
-
+static void startServer( char* ip, int port );
+static int cppFunc(int arg1, int arg2);
 
 #endif //LUAENGINE_SERVER_H_H

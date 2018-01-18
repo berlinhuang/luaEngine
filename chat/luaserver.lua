@@ -5,14 +5,25 @@ if strServType == nil then
     ScriptSys.exit(-1)
 end
 
-print("test plus func with 2 params cpp_func(1,2) = "..cpp_func(1,2))
---if strServType == 'MyServer' then
---    package.path = "./MyServer/?.lua;./Common/?/init.lua;./MyServer/Script/?.lua;./MyServer/Script/?/init.lua"
---end
+if strServType == 'MyServer' then
+    package.path = "./MyServer/?.lua;./Common/?/init.lua;./MyServer/Script/?.lua;./MyServer/Script/?/init.lua" --
+end
 --
---require("ServerStart")
+require("ServerStart")
 
-startServer("127.0.0.1",9981)
+
+
+
+
+
+
+
+
+
+
+
+
+
 -- 把C++中定义的类打入lua环境供Lua代码使用
 -- 在C++中为Lua环境添加全局变量（类实例对象）
 --

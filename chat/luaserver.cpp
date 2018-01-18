@@ -14,6 +14,13 @@ extern "C"
 #include "luaserver.h"
 using namespace std;
 
+static char AppProgArgs[] = "";//全局变量
+
+
+
+
+
+
 void startServer( char* ip, int port )
 {
     EventLoop loop;
@@ -30,8 +37,32 @@ void startServer( char* ip, int port )
     thr.join();
 }
 
-static char AppProgArgs[] = "";//全局变量
+int cppFunc(int arg1, int arg2)
+{
+    return arg1 + arg2;
+}
 
+
+//{  name,  func  }
+//{ 字符串， c函数指针 }
+static luaL_Reg luaserver[] = {
+        { NULL, NULL }
+};
+
+int luaopen_luaserver(lua_State *L)
+{
+    lua_newtable(L);
+    for (luaL_Reg *l = luaserver; l->name != NULL; l++) {
+        //lua_push*族函数都有"创建一个类型的值并压入"的语意
+        //lua_pushcclosure(L, c函数指针, 函数关联的upvalue的个数)
+        lua_pushcclosure(L, l->func, 0);  /* closure with those upvalues */
+        lua_setfield(L, -2, l->name);// lua_setfield( L, 索引, 字符串键 )    索引到t    t[l->name]= l->func   并把l->func出栈
+    }
+    lua_setglobal(L, "luaserver");
+    return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
 int ScriptSys_exit( lua_State* L )
 {
     int nArgc = lua_gettop( L ) ;
@@ -51,11 +82,7 @@ static const struct luaL_Reg stCommonFunc[] = {
         { NULL , NULL }
 };
 
-int cpp_func(int arg1, int arg2)
-{
-    return arg1 + arg2;
-}
-
+////////////////////////////////////////////////////////////////////////////////////////
 
 
 int main(int argc, char* argv[])
@@ -90,13 +117,17 @@ int main(int argc, char* argv[])
     }
 
     Logger::setLogLevel(Logger::INFO);//要有Logger::setLogLevel 不然 会报未定义
+
     lua_State* L = lua_open();
-    luaopen_base(L);//基础库
-    luaopen_string(L);//字符串库
+    luaL_openlibs(L);
+
     lua_tinker::set(L, "g_server", g_server);//没注册 这个 为什么会有个signal
     lua_tinker::set(L, "AppProgArgs", AppProgArgs);
-    lua_tinker::def(L, "cpp_func", cpp_func);
+
+
+    lua_tinker::def(L, "cppFunc", cppFunc);
     lua_tinker::def(L, "startServer", startServer);
+
 
     luaL_register( L , "ScriptSys" , stCommonFunc ) ;
 
