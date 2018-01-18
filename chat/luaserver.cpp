@@ -58,7 +58,7 @@ int luaopen_luaserver(lua_State *L)
         lua_pushcclosure(L, l->func, 0);  /* closure with those upvalues */
         lua_setfield(L, -2, l->name);// lua_setfield( L, 索引, 字符串键 )    索引到t    t[l->name]= l->func   并把l->func出栈
     }
-    lua_setglobal(L, "luaserver");
+    lua_setglobal(L, "luaserver");//将栈顶元素（newtable）置为Lua环境中的全局变量luaserver
     return 0;
 }
 
@@ -109,26 +109,35 @@ int main(int argc, char* argv[])
         cout << "egg: ./server -f -s SceneServer" << endl;
         return 0;
     }
-
     for(int i = 1; i<argc; i++ )
     {
         strcat(AppProgArgs, argv[i]);
         strcat(AppProgArgs," ");
     }
-
     Logger::setLogLevel(Logger::INFO);//要有Logger::setLogLevel 不然 会报未定义
 
     lua_State* L = lua_open();
     luaL_openlibs(L);
 
+//导出全局变量
     lua_tinker::set(L, "g_server", g_server);//没注册 这个 为什么会有个signal
     lua_tinker::set(L, "AppProgArgs", AppProgArgs);
 
+////导出全局表格CT...(C Table)
+//    lua_tinker::table luaserver(L, "CTTest");
+//    luaserver.set("key", 1);
+//    luaserver.set("sub", lua_tinker::table(L));
+// TODO:
 
-    lua_tinker::def(L, "cppFunc", cppFunc);
-    lua_tinker::def(L, "startServer", startServer);
 
 
+//导出函数CF...(C Func)
+    lua_newtable(L);
+    lua_tinker::subdef(L, "cppFunc", cppFunc);
+    lua_tinker::subdef(L, "startServer", startServer);
+    lua_setglobal(L, "CFServer");
+
+//导出函数
     luaL_register( L , "ScriptSys" , stCommonFunc ) ;
 
     lua_tinker::dofile(L, "luaserver.lua");

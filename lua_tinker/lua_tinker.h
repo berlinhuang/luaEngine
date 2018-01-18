@@ -644,6 +644,16 @@ namespace lua_tinker
         return 0;
     }
 
+    // table function
+    template<typename F>
+    void subdef(lua_State* L, const char* name, F func)
+    {
+        lua_pushstring(L, name);
+        lua_pushlightuserdata(L, (void*)func);
+        push_functor(L, func);
+        lua_settable(L, 1);
+    }
+
     // global function
     template<typename F>
     void def(lua_State* L, const char* name, F func)
