@@ -5,22 +5,33 @@
 -- Time: 下午7:07
 -- To change this template use File | Settings | File Templates.
 --
---local cppFunc, startServer = cppFunc, startServer
 
-local CFServer = CFServer
-local print, pairs = print, pairs
---local _G = _G
+local   CFServer, CTTest =
+        CFServer, CTTest
+local   print, pairs, type, require, table =
+        print, pairs, type, require, table
+local   _G = _G
 module(...)
 
---for k,v in pairs(_G) do
---    print(k,v)
---end
-
-for name, func in pairs( CFServer) do
-    print(name, "\t",func)
-end
+local Utils = require("Utils")
+table.print = Utils.print_r
 
 
-print("test plus func with 2 params cpp_func(1,2) = "..CFServer.cppFunc(1,2))
+local mytb = {
+    firstName = "Fred",
+    lastName = "Bob",
+    phoneNumber = "(555) 555-1212",
+    age = 30,
+    favoriteSports = { "Baseball", "Hockey", "Soccer" },
+    favoriteTeams  = { "Cowboys", "Panthers", "Reds" },
+}
 
-CFServer.startServer("127.0.0.1",9981)
+--table.print(_G)
+--table.print(mytb)
+table.print(CFServer)
+--table.print(CTTest)
+
+
+--print("test plus func with 2 params cpp_func(1,2) = "..CFServer.cppFunc(1,2))
+
+--CFServer.startServer("127.0.0.1",9981)

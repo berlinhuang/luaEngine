@@ -1,5 +1,5 @@
 --接收程序运行参数
-local strServType = string.match( AppProgArgs , "-s%s+(%w+)" )
+local strServType = string.match( g_progArgs , "-s%s+(%w+)" )
 if strServType == nil then
     print( "usage: -s [MyServer|SceneServer|DBServer|]" )
     ScriptSys.exit(-1)

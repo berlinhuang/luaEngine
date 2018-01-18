@@ -121,15 +121,18 @@ int main(int argc, char* argv[])
 
 //导出全局变量
     lua_tinker::set(L, "g_server", g_server);//没注册 这个 为什么会有个signal
-    lua_tinker::set(L, "AppProgArgs", AppProgArgs);
+    lua_tinker::set(L, "g_progArgs", AppProgArgs);
 
-////导出全局表格CT...(C Table)
+//导出全局表格CT...(C Table)
+//    lua_newtable(L);
 //    lua_tinker::table luaserver(L, "CTTest");
-//    luaserver.set("key", 1);
+//    luaserver.set("val", 1);
 //    luaserver.set("sub", lua_tinker::table(L));
-// TODO:
-
-
+//    lua_newtable(L);
+//    lua_tinker::table sub = luaserver.get<lua_tinker::table>("sub");//获取sub = { }
+//    sub.set("val", 2);//给表变量赋值 CTTest = { val = 1, sub = { val =2 } }
+//    lua_settable(L, LUA_GLOBALSINDEX);
+//    lua_settable(L, LUA_GLOBALSINDEX);
 
 //导出函数CF...(C Func)
     lua_newtable(L);
