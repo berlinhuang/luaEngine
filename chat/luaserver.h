@@ -24,7 +24,14 @@
 using namespace muduo;
 using namespace muduo::net;
 
-boost::function<void()> _onMessage;
+boost::function<void(const char*)> _onNewConnection;
+boost::function<void(const char*, const char*)> _onMessage;
+
+static int cppFunc(int arg1, int arg2);
+static int onMessage();
+static int onConnection();
+
+
 
 class ChatServer : boost::noncopyable
 {
@@ -34,10 +41,8 @@ public:
             : server_(loop, listenAddr, "ChatServer"),
               codec_(boost::bind(&ChatServer::onMessageQueue, this, _1))
     {
-        server_.setConnectionCallback(
-                boost::bind(&ChatServer::onConnection, this, _1));
-        server_.setMessageCallback(
-                boost::bind(&LengthHeaderCodec::onMessage, &codec_, _1, _2, _3));
+        server_.setConnectionCallback( boost::bind(&ChatServer::onConnection, this, _1));
+        server_.setMessageCallback( boost::bind(&LengthHeaderCodec::onMessage, &codec_, _1, _2, _3));
     }
 
     void start()
@@ -47,7 +52,8 @@ public:
     }
 
     bool hasMessge(){ return !messageQueue_.empty(); }
-    void distillMessageQueue(std::list<MessageQueuePtr>& messageQueue) {
+    void distillMessageQueue(std::list<MessageQueuePtr>& messageQueue)
+    {
         // todo:
         {
             MutexLockGuard lock(mutex_);
@@ -57,7 +63,8 @@ public:
     }
 
     // when timer event occur, create and push_front message to queue
-    void onTimerMessage(const MessageQueuePtr& message) {
+    void onTimerMessage(const MessageQueuePtr& message)
+    {
         {
             MutexLockGuard lock(mutex_);
             messageQueue_.push_front(message);
@@ -66,13 +73,14 @@ public:
 
     void onConnection(const TcpConnectionPtr& conn)
     {
-        LOG_INFO << conn->localAddress().toIpPort() << " -> "
-                 << conn->peerAddress().toIpPort() << " is "
-                 << (conn->connected() ? "UP" : "DOWN");
+//        LOG_INFO << conn->localAddress().toIpPort() << " -> "
+//                 << conn->peerAddress().toIpPort() << " is "
+//                 << (conn->connected() ? "UP" : "DOWN");
 
         if (conn->connected())
         {
             connections_.insert(conn);
+            _onNewConnection(conn->peerAddress().toIpPort().c_str());
         }
         else
         {
@@ -81,16 +89,15 @@ public:
     }
 
 private:
-    void onMessageQueue(const MessageQueuePtr& message) {
+    void onMessageQueue(const MessageQueuePtr& message)
+    {
         // todo: push to every conn's queue
         {
             MutexLockGuard lock(mutex_);
             messageQueue_.push_back(message);
         }
     }
-    void onStringMessage(const TcpConnectionPtr&,
-                         const string& message,
-                         Timestamp)
+    void onStringMessage(const TcpConnectionPtr&, const string& message, Timestamp)
     {
         for (ConnectionList::iterator it = connections_.begin();
              it != connections_.end();
@@ -111,11 +118,6 @@ private:
 };
 
 
-static void mystartServer( char* ip, int port );
-static int cppFunc(int arg1, int arg2);
-static int onMessage(  );
-
-
 ChatServer *g_server = 0;
 bool bHandleMsg = true;
 typedef std::list<MessageQueuePtr>::iterator MessageQueueIter;
@@ -125,8 +127,13 @@ static inline void hanleMessageQueue()
     while (bHandleMsg)
     {
         if (g_server && g_server->hasMessge())
-        {
-            _onMessage();
+        {    std::list<MessageQueuePtr> messageQueue;
+            g_server->distillMessageQueue(messageQueue);
+            for (MessageQueueIter itr = messageQueue.begin(); itr != messageQueue.end(); ++itr) {
+                const char *time = (*itr)->timestamp_.toString().c_str();
+                const char *msg = (*itr)->message_.c_str();
+                _onMessage(time,msg);
+            }
         }
     }
 }

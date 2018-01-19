@@ -18,23 +18,6 @@ using namespace std;
 static char AppProgArgs[] = "";//全局变量
 
 
-
-void mystartServer( char* ip, int port )
-{
-    EventLoop loop;
-    InetAddress serverAddr(ip, port);
-
-//    muduo::Thread thr(boost::bind(hanleMessageQueue), "hanleMessageQueue");
-//    thr.start();
-
-    ChatServer server(&loop, serverAddr);
-    g_server = &server;
-    server.start();
-
-    loop.loop();
-//    thr.join();
-}
-
 int startServer( lua_State* L )
 {
     const char *ip = luaL_checkstring(L,1);
@@ -107,41 +90,41 @@ static const struct luaL_Reg stCommonFunc[] = {
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-static int lua_callback = LUA_REFNIL;
+static int lua_messgecallback = LUA_REFNIL;
+static int lua_newconnectioncallback = LUA_REFNIL;
 
-static int setMessageCallback(lua_State *L)
+static int setNewConnectionCallback(lua_State *L)
 {
-    lua_callback = luaL_ref(L, LUA_REGISTRYINDEX);// 对栈顶的值v生成返回一个引用r，即将[引用r， 栈顶值v]存到LUA_REGISTRYINDEX表中
+    lua_newconnectioncallback = luaL_ref(L, LUA_REGISTRYINDEX);
     return 0;
 }
 
-static int onMessage(lua_State *L)
+static int setMessageCallback(lua_State *L)
 {
-    std::list<MessageQueuePtr> messageQueue;
-    g_server->distillMessageQueue(messageQueue);
-    for (MessageQueueIter itr = messageQueue.begin(); itr != messageQueue.end(); ++itr) {
-        const char *time = (*itr)->timestamp_.toString().c_str();
-        const char *msg = (*itr)->message_.c_str();
-        // 将一个引用值入栈
-        lua_rawgeti(L, LUA_REGISTRYINDEX, lua_callback);
-        lua_pushstring(L, time);//params
-        lua_pushstring(L, msg);
-        int status = lua_pcall(L, 2, 0, 1);//L当前栈，参数个数，返回值个数，发生错误处理时代码返回
-
-    }
+    lua_messgecallback = luaL_ref(L, LUA_REGISTRYINDEX);// 对栈顶的值v生成返回一个引用r，即将[引用r， 栈顶值v]存到LUA_REGISTRYINDEX表中
+    return 0;
 }
 
-static int testenv(lua_State *L)
+static int onMessage(lua_State *L, const char* tm, const char* msg)
 {
-    lua_getglobal(L, "defcallback");
-    lua_call(L, 0, 0);
+    // 将一个引用值入栈
+    lua_rawgeti(L, LUA_REGISTRYINDEX, lua_messgecallback);
+    lua_pushstring(L, tm);
+    lua_pushstring(L, msg);
+    int status = lua_pcall(L, 2, 0, 1);//L当前栈，参数个数，返回值个数，发生错误处理时代码返回
 }
 
+static int onNewConnection(lua_State *L, const char* ip)
+{
+    lua_rawgeti(L, LUA_REGISTRYINDEX, lua_newconnectioncallback);
+    lua_pushstring(L, ip);//params
+    int status = lua_pcall(L, 1, 0, 1);//L当前栈，参数个数，返回值个数，发生错误处理时代码返回
+}
 
 static const luaL_Reg cblib[] = {
-        {"_setMessageCallback", setMessageCallback},
-//        {"_onConnected", onConnected},
-        {NULL, NULL}
+        { "_setNewConnectionCallback", setNewConnectionCallback },
+        { "_setMessageCallback", setMessageCallback },
+        { NULL, NULL }
 };
 
 int luaopen_cb(lua_State *L)
@@ -204,7 +187,8 @@ int main(int argc, char* argv[])
 
 //callback CFNet
     luaopen_cb(L);
-    _onMessage= boost::bind(onMessage, L);
+    _onNewConnection = boost::bind(onNewConnection, L, _1);
+    _onMessage = boost::bind(onMessage, L,_1,_2);
 
     lua_tinker::dofile(L, "luaserver.lua");
     lua_close(L);
