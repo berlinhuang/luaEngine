@@ -12,11 +12,11 @@ bool luaBindClass(lua_State* state)
             .create("base")
             .def("is_base", &base::is_base);
 
-    LuaClass<test,base>(state).create_inh("test")// 包含了 相面三条语句实现
-                    //lua_tinker::class_add<test>(state, "test");
-                    //lua_tinker::class_inh<test, base>(state);//注册类继承关系
-                    //lua_tinker::class_con<test>(state, lua_tinker::constructor<test, int>); //cons
-                    //LuaClass<test>(state)
+//    LuaClass<test,base>(state).create_inh("test")// 包含了 相面三条语句实现
+                    lua_tinker::class_add<test>(state, "test");
+                    lua_tinker::class_inh<test, base>(state);//注册类继承关系
+                    lua_tinker::class_con<test>(state, lua_tinker::constructor<test, int>); //cons
+                    LuaClass<test>(state)
             .def("is_test", &test::is_test)
             .def("ret_void", &test::ret_void)
             .def("ret_int", &test::ret_int)

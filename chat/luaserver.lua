@@ -6,7 +6,7 @@ if strServType == nil then
 end
 
 if strServType == 'MyServer' then
-    package.path = "./MyServer/?.lua;./Common/?/init.lua;./MyServer/Script/?.lua;./MyServer/Script/?/init.lua" --
+    package.path = "./MyServer/?.lua;./Common/?/Init.lua;./MyServer/?.lua;./MyServer/?/Init.lua" --
 end
 --
 require("ServerStart")
