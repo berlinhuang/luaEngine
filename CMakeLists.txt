@@ -4,9 +4,8 @@ project(luaEngine)
 
 add_subdirectory(lua515)
 add_subdirectory(lua_tinker)
-add_subdirectory(chat)
-add_subdirectory(sample)
-add_subdirectory(callback)
+add_subdirectory(luaEngine)
+add_subdirectory(luaTinkerSample)
 
 
 

@@ -12,7 +12,7 @@ extern "C"
 #include <signal.h>
 
 #include "lua_bind.h"
-#include "luaserver.h"
+#include "LuaServer.h"
 using namespace std;
 
 static char AppProgArgs[] = "";//全局变量
@@ -28,7 +28,7 @@ int startServer( lua_State* L )
     InetAddress serverAddr(ip, port);
     muduo::Thread thr(boost::bind(hanleMessageQueue), "hanleMessageQueue");
     thr.start();
-    ChatServer server(&loop, serverAddr);
+    LuaServer server(&loop, serverAddr);
     g_server = &server;
     server.start();
 
@@ -190,7 +190,7 @@ int main(int argc, char* argv[])
     _onNewConnection = boost::bind(onNewConnection, L, _1);
     _onMessage = boost::bind(onMessage, L,_1,_2);
 
-    lua_tinker::dofile(L, "luaserver.lua");
+    lua_tinker::dofile(L, "ServMain.lua");
     lua_close(L);
     return 0;
 }

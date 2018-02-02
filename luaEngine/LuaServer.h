@@ -4,7 +4,7 @@
 
 #ifndef LUAENGINE_SERVER_H_H
 #define LUAENGINE_SERVER_H_H
-#include "codec.h"
+#include "Codec.h"
 
 #include <muduo/base/Logging.h>
 #include <muduo/base/Mutex.h>
@@ -33,15 +33,15 @@ static int onConnection();
 
 
 
-class ChatServer : boost::noncopyable
+class LuaServer : boost::noncopyable
 {
 public:
-    ChatServer(EventLoop* loop,
+    LuaServer(EventLoop* loop,
                const InetAddress& listenAddr)
             : server_(loop, listenAddr, "ChatServer"),
-              codec_(boost::bind(&ChatServer::onMessageQueue, this, _1))
+              codec_(boost::bind(&LuaServer::onMessageQueue, this, _1))
     {
-        server_.setConnectionCallback( boost::bind(&ChatServer::onConnection, this, _1));
+        server_.setConnectionCallback( boost::bind(&LuaServer::onConnection, this, _1));
         server_.setMessageCallback( boost::bind(&LengthHeaderCodec::onMessage, &codec_, _1, _2, _3));
     }
 
@@ -118,7 +118,7 @@ private:
 };
 
 
-ChatServer *g_server = 0;
+LuaServer *g_server = 0;
 bool bHandleMsg = true;
 typedef std::list<MessageQueuePtr>::iterator MessageQueueIter;
 

@@ -11,7 +11,7 @@ local   require, string, print, table =
 
 module( "Uitls" )
 require( "Utils.Table" )
-
+require( "Utils.Object" )
 --require( "Utils.")
 
 
