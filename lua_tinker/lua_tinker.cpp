@@ -30,9 +30,11 @@ void lua_tinker::init(lua_State *L)
 /*---------------------------------------------------------------------------*/
 /* __s64                                                                     */
 /*---------------------------------------------------------------------------*/
+//为uint64_t 准备的metatable
 static int tostring_s64(lua_State *L)
 {
 	char temp[64];
+	//%I64u这样古老的标签，
 	sprintf(temp, "%lld", *(long long*)lua_topointer(L, 1));
 	lua_pushstring(L, temp);
 	return 1;
@@ -156,6 +158,7 @@ void lua_tinker::init_u64(lua_State *L)
 /*---------------------------------------------------------------------------*/
 void lua_tinker::dofile(lua_State *L, const char *filename)
 {
+	//放入错误处理函数并且，记录堆栈地址
 	lua_pushcclosure(L, on_error, 0);
 	int errfunc = lua_gettop(L);
 	//luaL_loadfile把一个文件加载为 Lua 代码块,这个函数使用 lua_load 加载文件中的数据,不运行
@@ -172,7 +175,7 @@ void lua_tinker::dofile(lua_State *L, const char *filename)
 		print_error(L, "%s", lua_tostring(L, -1));
 		lua_pop(L, 1);
 	}
-
+	//移除错误的string
 	lua_pop(L, 1);
 }
 
@@ -264,6 +267,7 @@ void lua_tinker::print_error(lua_State *L, const char* fmt, ...)
 	else
 	{
 		printf("%s\n", text);
+		//如果弹出的不是函数，
 		lua_pop(L, 1);
 	}
 }
@@ -579,34 +583,44 @@ static void invoke_parent(lua_State *L)
 }
 
 /*---------------------------------------------------------------------------*/
+//LUA的程序通过这个函数完定义类的__index
+//这个函数的堆栈情况可以这样理解
+//第一次enum_stack时
+//-1,结果
+//-2，key
+//-3，metatable
+//-4,key
 int lua_tinker::meta_get(lua_State *L)
 {
-	lua_getmetatable(L, 1);
-	lua_pushvalue(L, 2);
-	lua_rawget(L, -2);
 
-	if (lua_isuserdata(L, -1))
+	lua_getmetatable(L, 1);	//要检查的数据在栈底部，取出得到其metatable放入栈顶
+	lua_pushvalue(L, 2);    //复制栈底倒数第二个参数key，放入栈顶
+	lua_rawget(L, -2);    	//在metatable里面寻找key，
+
+	if (lua_isuserdata(L, -1))  //如果是一个userdata
 	{
-		user2type<var_base*>::invoke(L, -1)->get(L);
-		lua_remove(L, -2);
+		user2type<var_base*>::invoke(L, -1)->get(L);        //进行调用
+		lua_remove(L, -2);       							//从堆栈移除userdata.
 	}
-	else if (lua_isnil(L, -1))
+	else if (lua_isnil(L, -1))  //如果没有找到
 	{
 		lua_remove(L, -1);
-		invoke_parent(L);
-		if (lua_isnil(L, -1))
+		invoke_parent(L);       //检查的他的父类里面是否有可以调用的
+		if (lua_isnil(L, -1))   //如果仍然是NULL
 		{
 			lua_pushfstring(L, "can't find '%s' class variable. (forgot registering class variable ?)", lua_tostring(L, 2));
 			lua_error(L);
 		}
+		//这儿是有问题的，其实没有调用父类的数据。
 	}
 
-	lua_remove(L, -2);
+	lua_remove(L, -2);    //删除掉metatable，
 
 	return 1;
 }
 
 /*---------------------------------------------------------------------------*/
+//LUA的程序通过这个函数完成定义类的__newindex
 int lua_tinker::meta_set(lua_State *L)
 {
 	lua_getmetatable(L, 1);
@@ -703,7 +717,7 @@ lua_tinker::table::table(lua_State* L)
 	lua_newtable(L);
 
 	m_obj = new table_obj(L, lua_gettop(L));
-
+	//原来作者这个地方写漏了一个引用增加
 	m_obj->inc_ref();
 }
 
