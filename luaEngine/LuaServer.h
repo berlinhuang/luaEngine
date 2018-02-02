@@ -2,8 +2,9 @@
 // Created by root on 18-1-17.
 //
 
-#ifndef LUAENGINE_SERVER_H_H
-#define LUAENGINE_SERVER_H_H
+#ifndef LUAENGINE_LUASERVER_H_H
+#define LUAENGINE_LUASERVER_H_H
+
 #include "Codec.h"
 
 #include <muduo/base/Logging.h>
@@ -24,21 +25,11 @@
 using namespace muduo;
 using namespace muduo::net;
 
-boost::function<void(const char*)> _onNewConnection;
-boost::function<void(const char*, const char*)> _onMessage;
-
-static int cppFunc(int arg1, int arg2);
-static int onMessage();
-static int onConnection();
-
-
-
 class LuaServer : boost::noncopyable
 {
 public:
-    LuaServer(EventLoop* loop,
-               const InetAddress& listenAddr)
-            : server_(loop, listenAddr, "ChatServer"),
+    LuaServer(EventLoop* loop, const InetAddress& listenAddr)
+            : server_(loop, listenAddr, "LuaServer"),
               codec_(boost::bind(&LuaServer::onMessageQueue, this, _1))
     {
         server_.setConnectionCallback( boost::bind(&LuaServer::onConnection, this, _1));
@@ -54,11 +45,10 @@ public:
     bool hasMessge(){ return !messageQueue_.empty(); }
     void distillMessageQueue(std::list<MessageQueuePtr>& messageQueue)
     {
-        // todo:
+        //TODO:
         {
             MutexLockGuard lock(mutex_);
             messageQueue.swap(messageQueue_);
-
         }
     }
 
@@ -71,27 +61,14 @@ public:
         }
     }
 
-    void onConnection(const TcpConnectionPtr& conn)
-    {
-//        LOG_INFO << conn->localAddress().toIpPort() << " -> "
-//                 << conn->peerAddress().toIpPort() << " is "
-//                 << (conn->connected() ? "UP" : "DOWN");
+    void onConnection(const TcpConnectionPtr& conn);
 
-        if (conn->connected())
-        {
-            connections_.insert(conn);
-            _onNewConnection(conn->peerAddress().toIpPort().c_str());
-        }
-        else
-        {
-            connections_.erase(conn);
-        }
-    }
+    static void hanleMessageQueue();
 
 private:
     void onMessageQueue(const MessageQueuePtr& message)
     {
-        // todo: push to every conn's queue
+        //TODO: push to every conn's queue
         {
             MutexLockGuard lock(mutex_);
             messageQueue_.push_back(message);
@@ -99,9 +76,7 @@ private:
     }
     void onStringMessage(const TcpConnectionPtr&, const string& message, Timestamp)
     {
-        for (ConnectionList::iterator it = connections_.begin();
-             it != connections_.end();
-             ++it)
+        for (ConnectionList::iterator it = connections_.begin();  it != connections_.end(); ++it)
         {
             codec_.send(get_pointer(*it), message);
         }
@@ -113,31 +88,9 @@ private:
     ConnectionList connections_;
 
     mutable MutexLock mutex_;
-    // todo: use weak_ptr
+    // TODO: use weak_ptr
     std::list<MessageQueuePtr> messageQueue_;
 };
-
-
-LuaServer *g_server = 0;
-bool bHandleMsg = true;
-typedef std::list<MessageQueuePtr>::iterator MessageQueueIter;
-
-static inline void hanleMessageQueue()
-{
-    while (bHandleMsg)
-    {
-        if (g_server && g_server->hasMessge())
-        {    std::list<MessageQueuePtr> messageQueue;
-            g_server->distillMessageQueue(messageQueue);
-            for (MessageQueueIter itr = messageQueue.begin(); itr != messageQueue.end(); ++itr) {
-                const char *time = (*itr)->timestamp_.toString().c_str();
-                const char *msg = (*itr)->message_.c_str();
-                _onMessage(time,msg);
-            }
-        }
-    }
-}
-
 
 
 #endif //LUAENGINE_SERVER_H_H

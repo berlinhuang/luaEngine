@@ -7,14 +7,9 @@
 --
 
 
-local   print, require, table, _G =
-        print, require, table, _G
-
-local   CFServer =
-        CFServer
-
+local   print, require, table, _G = print, require, table, _G
+local   CFServer, CFSys = CFServer, CFSys
 module(...)
-
 local Utils = require("Utils")
 table.print = Utils.printTable
 table.deepCopy = Utils.deepCopy
@@ -32,7 +27,7 @@ local myTable = {
 
 function testExport()
     table.print(CFServer)
---    table.print(CTTest)
+    table.print(CFSys)
 end
 
 
@@ -48,7 +43,6 @@ end
 function printG()
     table.print(_G)
 end
-
 
 testExport()
 testUtils()

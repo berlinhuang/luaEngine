@@ -6,11 +6,8 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local   CFServer, CTTest, CFNet =
-        CFServer, CTTest, CFNet
-local   print, require =
-        print, require
-
+local   CFServer = CFServer
+local   print, require =  print, require
 module(...)
 
 function onNewConnection( ip )
@@ -23,13 +20,13 @@ end
 
 
 function startServer()
-    CFNet._setNewConnectionCallback(onNewConnection)
-    CFNet._setMessageCallback(onMessage)
-    CFServer.startServer("127.0.0.1",9981)
+    CFServer._setNewConnectionCallback(onNewConnection)
+    CFServer._setMessageCallback(onMessage)
+    CFServer._startServer("127.0.0.1",9981)
 end
 
---startServer()
+startServer()
 
 
-require( "TestUtils")
+--require( "TestUtils")
 

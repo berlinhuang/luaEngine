@@ -13,6 +13,6 @@ include_directories(../lua515)
 include_directories(../lua_tinker)
 
 
-add_executable(LuaServer LuaServer.cpp)
+add_executable(LuaServer Main.cpp LuaStart.cpp LuaServer.cpp)
 target_link_libraries(LuaServer lua luatinker)
 target_link_libraries(LuaServer muduo_base muduo_net pthread)
