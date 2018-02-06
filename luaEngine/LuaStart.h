@@ -14,6 +14,7 @@ extern "C"
 #include "lua_tinker.h"
 #include "lua_bind.h"
 #include "LuaServer.h"
+#include <muduo/base/Types.h>
 
 #include <signal.h>
 using namespace std;

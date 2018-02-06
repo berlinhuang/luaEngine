@@ -7,8 +7,9 @@
 --
 
 
-local   print, require, table, _G = print, require, table, _G
-local   CFServer, CFSys = CFServer, CFSys
+local print, require, table, _G = print, require, table, _G
+local CFServer, CFSys = CFServer, CFSys
+local InetAddress, StringArg, Thread, EventLoop = InetAddress, StringArg, Thread, EventLoop
 module(...)
 local Utils = require("Utils")
 table.print = Utils.printTable
@@ -39,10 +40,28 @@ function testUtils()
     table.print(myTableCopy)
 end
 
+function threadFunc()
+    print("in threading...")
+end
+
+
+function printObj()
+    local strAddr = StringArg("192.168.50.135")
+    local inetAddr = InetAddress(strAddr,12)
+    Utils.objinfo(inetAddr)
+    local loop = EventLoop()
+    Utils.objinfo(loop)
+
+--    local threadFunc = Function( threadFunc);
+--    local thread = Thread( threadFunc,"mythread")
+--    Utils.objinfo(Thread)
+end
 
 function printG()
     table.print(_G)
 end
 
-testExport()
-testUtils()
+--testExport()
+--testUtils()
+
+printObj()

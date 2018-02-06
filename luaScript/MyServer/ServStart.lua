@@ -25,8 +25,8 @@ function startServer()
     CFServer._startServer("127.0.0.1",9981)
 end
 
-startServer()
+--startServer()
 
 
---require( "TestUtils")
+require( "TestUtils")
 

@@ -95,17 +95,25 @@ void exportClass( lua_State* L )
             .def("start", &LuaServer::start)
             .def("onConnection", &LuaServer::onConnection);
 
+    LuaClass<StringArg>(L)
+            .create<const char*>("StringArg");
+
+
     LuaClass<InetAddress>(L)
-            .create<unsigned short, bool, bool>("InetAddress")
+//            .create<unsigned short, bool, bool>("InetAddress")
             .create<StringArg, unsigned short, bool>("InetAddress");
 
     LuaClass<EventLoop>(L)
             .create("EventLoop")
             .def("loop",&EventLoop::loop);
 
+//    LuaClass<boost::function>(L)
+//            .create<void>("Function");
+
     LuaClass<muduo::Thread>(L)
-            .create<boost::function<void ()>, string >("Thread")
-            .def("start",&muduo::Thread::start);
+            .create<const boost::function<void ()>&, const muduo::string& >("Thread")
+            .def("start",&muduo::Thread::start)
+            .def("join", &muduo::Thread::join);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -130,7 +138,10 @@ void LuaStart()
     _onNewConnection = boost::bind(onNewConnection, L, _1);
     _onMessage = boost::bind(onMessage, L,_1,_2);
 
+    exportClass(L);
+
     lua_tinker::dofile(L, "ServMain.lua");
+
     lua_close(L);
 }
 
