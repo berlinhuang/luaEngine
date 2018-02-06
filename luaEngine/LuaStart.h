@@ -12,6 +12,7 @@ extern "C"
 };
 
 #include "lua_tinker.h"
+#include "lua_bind.h"
 #include "LuaServer.h"
 
 #include <signal.h>
@@ -31,6 +32,8 @@ static int onMessage(lua_State *L, const char* tm, const char* msg);
 static int onNewConnection(lua_State *L, const char* ip);
 
 void LuaStart();
+
+static void exportClass( lua_State* L );
 
 int luaopen_LuaServer(lua_State *L);
 

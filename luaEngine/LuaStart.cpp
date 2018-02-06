@@ -87,6 +87,32 @@ static const struct luaL_Reg stFunc[] = {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+
+void exportClass( lua_State* L )
+{
+    LuaClass<LuaServer>(L)
+            .create<EventLoop*, const InetAddress&>("ChatServer")  // 模板方法
+            .def("start", &LuaServer::start)
+            .def("onConnection", &LuaServer::onConnection);
+
+    LuaClass<InetAddress>(L)
+            .create<unsigned short, bool, bool>("InetAddress")
+            .create<StringArg, unsigned short, bool>("InetAddress");
+
+    LuaClass<EventLoop>(L)
+            .create("EventLoop")
+            .def("loop",&EventLoop::loop);
+
+    LuaClass<muduo::Thread>(L)
+            .create<boost::function<void ()>, string >("Thread")
+            .def("start",&muduo::Thread::start);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
 void LuaStart()
 {
 
@@ -154,23 +180,6 @@ void LuaStart()
 //    lua_setglobal(L, "CFServer");
 
 
-
-//void classExport()
-//{
-//    LuaClass<InetAddress>(L)
-////            .create<unsigned short, bool, bool>("InetAddress");
-//              .create<StringArg, unsigned short, bool>("InetAddress");
-//
-//
-//    LuaClass<EventLoop>(L)
-//            .create("EventLoop")
-//            .def("loop",&EventLoop::loop);
-//
-//    LuaClass<ChatServer>(L)
-//            .create<EventLoop*, const InetAddress&>("ChatServer")  // 模板方法
-//            .def("start", &ChatServer::start)
-//            .def("onConnection", &ChatServer::onConnection);
-//}
 
 //
 //int luaopen_LuaServer(lua_State *L)
